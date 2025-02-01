@@ -1,8 +1,14 @@
 const container = document.getElementById('pokemon-container');
+const prevPageButton = document.getElementById('prev-page');
+const nextPageButton = document.getElementById('next-page');
 
-async function fetchPokemon() {
-    const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10');
+let offset = 0; // Inicia en 0 para la primera página
+const limit = 8; // Número de Pokémon por página
+
+async function fetchPokemon(offset, limit) {
+    const response = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
     const data = await response.json();
+    container.innerHTML = ''; // Limpia el contenedor antes de agregar nuevos Pokémon
     data.results.forEach(async (pokemon) => {
         const pokemonData = await fetch(pokemon.url);
         const pokemonInfo = await pokemonData.json();
@@ -20,4 +26,26 @@ function displayPokemon(pokemon) {
     container.appendChild(card);
 }
 
-fetchPokemon();
+// Cargar la primera página al inicio
+fetchPokemon(offset, limit);
+
+// Evento para el botón "Siguiente"
+nextPageButton.addEventListener('click', () => {
+    offset += limit; // Aumenta el offset para cargar la siguiente página
+    fetchPokemon(offset, limit);
+    updatePaginationButtons();
+});
+
+// Evento para el botón "Anterior"
+prevPageButton.addEventListener('click', () => {
+    if (offset >= limit) {
+        offset -= limit; // Disminuye el offset para cargar la página anterior
+        fetchPokemon(offset, limit);
+        updatePaginationButtons();
+    }
+});
+
+// Función para actualizar el estado de los botones de paginación
+function updatePaginationButtons() {
+    prevPageButton.disabled = offset === 0; // Deshabilita el botón "Anterior" si estamos en la primera página
+}
